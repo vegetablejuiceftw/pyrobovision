@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slidershurrdurr</title>
+    <!-- // <script src="http://egert.ee/bl0at3r/for.js"></script> -->
+    {% block head %}
+    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='nouislider.css') }}">
+    <script type="text/javascript" src="{{ url_for('static',filename='nouislider.js') }}"></script>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='webpage.css') }}">
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    {% endblock %}
+
+</head>
+<body>
+
+<div class="home-menu pure-menu pure-menu-horizontal pure-menu-fixed">
+    <a class="pure-menu-heading" href="">Ministry of silly robots</a>
+
+    <ul class="pure-menu-list">
+        <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+            <a href="#" class="pure-menu-link">Cameras <i class="fa fa-camera"> <sup>{{ camera_list|length }}</sup></i></a>
+            <ul class="pure-menu-children">
+                <li class="pure-menu-item">
+                    <a href="" class="pure-menu-link">Tiled cameras <i class="fa fa-braille"></i></a>
+                </li>
+                <li class="pure-menu-item">
+                    <a href="/group" class="pure-menu-link">Group photo <i class="fa fa-map"></i></a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+            <a href="#" id="menuLink1" class="pure-menu-link">Status <i class="fa fa-battery-quarter"></i> </a>
+            <ul class="pure-menu-children">
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Battery 25% <i
+                        class="fa fa-battery-quarter"></i></a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">CPU Load 35%
+                    <i class="fa fa-cog fa-spin"></i></a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Compassion 0% <i class="fa fa-heart"></i>
+                </a></li>
+            </ul>
+        </li>
+
+        <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+            <a href="#" id="menuLink1" class="pure-menu-link">Halp <i class="fa fa-beer"></i></i> </a>
+            <ul class="pure-menu-children">
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Colors update after release</a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">You can drag from the middle</a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Dong anger the robots</a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">They smell fear</a></li>
+            </ul>
+        </li>
+
+        <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+            <a href="#" id="menuLink1" class="pure-menu-link">GitHub <i class="fa fa-github"></i> </a>
+            <ul class="pure-menu-children">
+                <li class="pure-menu-item"><a href="https://github.com/egaia/pyrobovision" class="pure-menu-link">egaia
+                    <i class="fa fa-heart"></i></a></li>
+                <li class="pure-menu-item"><a href="https://github.com/laurivosandi/pyrobovision"
+                                              class="pure-menu-link">laurivosandi <i class="fa fa-heart"></i></a></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+{% block content %}
+{% endblock %}
+
+<script type="text/javascript">
+    function setSource(key,type) {
+        var camera = '#camera__'+key;
+        if (type==undefined){
+            $(camera).attr("src","");
+            return;
+        }
+        var url = "/"+type+"/"+key;
+        if ($(camera).attr("src")!=url){
+            $(camera).attr("src","");
+            $(camera).attr("src",url);
+        }
+    }
+
+    function setColor(values) {
+        var channel = this.target.dataset.channel;
+        var query = "LOWER=" + values[0] + "&UPPER=" + values[1] + "&channel=" + channel;
+        $.ajax({
+            url: "/config/camera/" + this.target.id,
+            type: 'POST',
+            data: query
+        });
+    }
+
+    var sliders = $(".no-ui-slider").find(".slider");
+    for (var i = 0; i < sliders.length; i++) {
+        var min = parseInt(sliders[i].getAttribute("data-min"));
+        var max = parseInt(sliders[i].getAttribute("data-max"));
+        var start = parseInt(sliders[i].getAttribute("data-start"));
+        var end = parseInt(sliders[i].getAttribute("data-end"));
+        noUiSlider.create(sliders[i], {
+            start: [start, end],
+            behaviour: 'drag',
+            animate: false,
+            step: 1,
+            connect: true,
+            tooltips: true,
+            range: {'min': min, 'max': max},
+            format: {
+                to: function (value) {
+                    return Math.round(value);
+                },
+                from: function (value) {
+                    return value;
+                }
+            }
+        });
+        sliders[i].noUiSlider.on('change', setColor);
+    }
+
+</script>
+
+{% block extra_scripts %}
+{% endblock %}
+
+</body>
+</html>

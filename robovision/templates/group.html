@@ -1,0 +1,54 @@
+{% extends "template.html" %}
+
+{% block content %}
+    <div class='center'>
+        <div class="multiCameraWrapper">
+            <div class="buttons">
+                <button type="button" class="btn btn-primary" onclick='setGroupSource("cameras","video");'>Primary</button>
+                <button type="button" class="btn btn-success" onclick='setGroupSource("cameras","debug");'>Debug</button>
+                <button type="button" class="btn btn-info" onclick='setGroupSource("cameras","combo");'> Both</button>
+                <button type="button" class="btn btn-danger" onclick='setGroupSource("cameras");'>None</button>
+            </div>
+            <div class="cameras">
+                <img id='cameras' style="-webkit-user-select: none" src="combined/video">
+            </div>
+        </div>
+        {% for key,camera in camera_list %}
+                <div class="floatBlock">
+                    <h2><i class="fa fa-camera">: </i>{{ key }}</h2>
+                    <div class="no-ui-slider">
+                        <div class="slider" id='{{ key }}' data-channel="H" data-min="0" data-max="180"
+                             data-start='{{ camera.BALL_LOWER[0] }}'
+                             data-end='{{ camera.BALL_UPPER[0] }}'></div>
+                        <br>
+                        <div class="slider" id='{{ key }}' data-channel="S" data-min="0" data-max="255"
+                             data-start='{{ camera.BALL_LOWER[1] }}' data-end='{{ camera.BALL_UPPER[1] }}'></div>
+                        <br>
+                        <div class="slider" id='{{ key }}' data-channel="V" data-min="0" data-max="255"
+                             data-start='{{ camera.BALL_LOWER[2] }}' data-end='{{ camera.BALL_UPPER[2] }}'></div>
+                    </div>
+                </div>
+
+            {% else %}
+                <em>Unbelievable. No CAMERAS here so far</em>
+            {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript">
+        function setGroupSource(key,type) {
+            var camera = '#'+key;
+            if (type==undefined){
+                $(camera).attr("src","");
+                return;
+            }
+            var url = "combined/"+type;
+            if ($(camera).attr("src")!=url){
+                $(camera).attr("src","");
+                $(camera).attr("src",url);
+            }
+        }
+    </script>
+{% endblock %}
+

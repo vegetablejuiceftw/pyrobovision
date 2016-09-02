@@ -1,0 +1,40 @@
+{% extends "template.html" %}
+
+{% block content %}
+<div class='center'>
+    {% for key,camera in camera_list %}
+
+        <div class="cameraWrapper">
+            <button type="button" class="btn btn-primary"
+                    onclick='setSource("{{ key }}","video");'>Primary
+            </button>
+            <button type="button" class="btn btn-success"
+                    onclick='setSource("{{ key }}","debug");'>Debug
+            </button>
+            <button type="button" class="btn btn-info" onclick='setSource("{{ key }}","both");'>
+                Both
+            </button>
+            <button type="button" class="btn btn-danger" onclick='setSource("{{ key }}");'>None</button>
+
+            <img id='camera__{{ key }}' style="-webkit-user-select: none" src="/video/{{ key }}">
+
+            <div class="colorPicker">
+                <div class="no-ui-slider">
+                    <div class="slider" id='{{ key }}' data-channel="H" data-min="0" data-max="180"
+                         data-start='{{ camera.BALL_LOWER[0] }}'
+                         data-end='{{ camera.BALL_UPPER[0] }}'></div>
+                    <br>
+                    <div class="slider" id='{{ key }}' data-channel="S" data-min="0" data-max="255"
+                         data-start='{{ camera.BALL_LOWER[1] }}' data-end='{{ camera.BALL_UPPER[1] }}'></div>
+                    <br>
+                    <div class="slider" id='{{ key }}' data-channel="V" data-min="0" data-max="255"
+                         data-start='{{ camera.BALL_LOWER[2] }}' data-end='{{ camera.BALL_UPPER[2] }}'></div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <em>Unbelievable. No CAMERAS here so far</em>
+    {% endfor %}
+</div>
+{% endblock %}
