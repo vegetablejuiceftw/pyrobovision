@@ -7,7 +7,7 @@ import imp
 import json
 import os
 
-
+import numpy
 
 from PyMata.pymata import PyMata
 from threading import Thread, Event
@@ -76,10 +76,19 @@ class Motor(Thread):
         while self.running:
             sleep(0.008)
 
-            rotate = self.data.get('rotate')
-            print('rotate>?', rotate)
+            Fw = self.data.get('rotate',0) 
+            c = int(Fw*255) 
+            Fx, Fy = self.data.get('Fx',0), self.data.get('Fy',0)
+            matrix = [[0.58, -0.58, 0],[-0.33, -0.33, 0.67],[0.33,0.33,0.33]]
+            matrix = [[0.58, -0.33, 0.33],[-0.58, -0.33, 0.33],[0,0.67,0.33]]
             
-            continue
+            Fa, Fb, Fc = numpy.dot(matrix,[Fx,Fy,Fw])
+
+            print("{:.4f} {:.4f} {:.4f}".format(Fa,Fb,Fc)) 
+
+            #print(c)          
+            
+            #continue
             board = self.board
 
             board.analog_write(MOTOR_1_PWM, 0)
@@ -96,17 +105,19 @@ class Motor(Thread):
 
 
             # Set directions
-            board.digital_write(MOTOR_1_A, c < 0)
-            board.digital_write(MOTOR_1_B, c > 0)
-            board.digital_write(MOTOR_2_A, c < 0)
-            board.digital_write(MOTOR_2_B, c > 0)
-            board.digital_write(MOTOR_3_A, c < 0)
-            board.digital_write(MOTOR_3_B, c > 0)
+            board.digital_write(MOTOR_1_A, Fa < 0)
+            board.digital_write(MOTOR_1_B, Fa > 0)
+            board.digital_write(MOTOR_2_A, Fb < 0)
+            board.digital_write(MOTOR_2_B, Fb > 0)
+            board.digital_write(MOTOR_3_A, Fc < 0)
+            board.digital_write(MOTOR_3_B, Fc > 0)
 
             # Set duty cycle
-            board.analog_write(MOTOR_1_PWM, 255-max(25, abs(c)))
-            board.analog_write(MOTOR_2_PWM, 255- max(25, abs(c)))
-            board.analog_write(MOTOR_3_PWM, 255-max(25, abs(c)))
+            board.analog_write(MOTOR_1_PWM, 255-max(25, abs(int(float(Fa)*255))))
+            board.analog_write(MOTOR_2_PWM, 255-max(25, abs(int(float(Fb)*255))))
+            board.analog_write(MOTOR_3_PWM, 255-max(25, abs(int(float(Fc)*255))))
+            
+            #print('this is C', c)
             
         
 motor_driver = Motor()
@@ -136,11 +147,18 @@ def command(ws):
         if not axis:
             continue      
 
-        a,b,right_joystick_x,d,e,f = [int(axis.get(j,0)*255) for j in "012345"]
+        a,b,right_joystick_x,d,e,f = [axis.get(j,0) for j in "012345"]
 
-        print(a,b,right_joystick_x,d,e,f)
+        #print(a,b,right_joystick_x,d,e,f)
+        #print(a,b)
         
-        motor_driver.load_data({'rotate':right_joystick_x})
+        data = {
+            'rotate': right_joystick_x,
+            'Fx': a,
+            'Fy': b,             
+        }
+            
+        motor_driver.load_data(data)
 
 import gevent
 from gevent import pywsgi
