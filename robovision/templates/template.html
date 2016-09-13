@@ -6,15 +6,18 @@
     <title>Slidershurrdurr</title>
     <!-- // <script src="http://egert.ee/bl0at3r/for.js"></script> -->
     {% block head %}
-    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='nouislider.css') }}">
-    <script type="text/javascript" src="{{ url_for('static',filename='nouislider.js') }}"></script>
-    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='webpage.css') }}">
+        <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='nouislider.css') }}">
+        <script type="text/javascript" src="{{ url_for('static',filename='nouislider.js') }}"></script>
+        <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='webpage.css') }}">
 
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+
     {% endblock %}
 
 </head>
@@ -74,16 +77,16 @@
 {% endblock %}
 
 <script type="text/javascript">
-    function setSource(key,type) {
-        var camera = '#camera__'+key;
-        if (type==undefined){
-            $(camera).attr("src","");
+    function setSource(key, type) {
+        var camera = '#camera__' + key;
+        if (type == undefined) {
+            $(camera).attr("src", "");
             return;
         }
-        var url = "/"+type+"/"+key;
-        if ($(camera).attr("src")!=url){
-            $(camera).attr("src","");
-            $(camera).attr("src",url);
+        var url = "/" + type + "/" + key;
+        if ($(camera).attr("src") != url) {
+            $(camera).attr("src", "");
+            $(camera).attr("src", url);
         }
     }
 
@@ -122,6 +125,58 @@
         });
         sliders[i].noUiSlider.on('change', setColor);
     }
+
+
+    function updateStatus() {
+        var data = {};
+        for (j in controllers) {
+            var controller = controllers[j];
+            data[j] = {'button': {}, 'axis': {}};
+            for (var i = 0; i < controller.buttons.length; i++) {
+                var val = controller.buttons[i];
+                var pressed = val == 1.0;
+                if (typeof(val) == "object") {
+                    pressed = val.pressed;
+                    val = val.value;
+                }
+                data[j]['button'][i] = [pressed, val];
+            }
+            for (var i = 0; i < controller.axes.length; i++) {
+                data[j]['axis'][i] = controller.axes[i];
+            }
+
+
+        }
+        return JSON.stringify(data);
+    }
+
+    function scangamepads() {
+        var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
+        for (var i = 0; i < gamepads.length; i++) {
+            if (gamepads[i]) {
+                controllers[gamepads[i].index] = gamepads[i];
+            }
+        }
+    }
+    var controllers = {};
+    $(document).ready(function () {
+        console.log('start!!!!!!!!!!!')
+
+        // setInterval(scangamepads, 500);
+
+        var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+        // socket.on('my response', function(msg) {
+        //     // console.log('<p>Received: ' + msg.data + '</p>');
+        //     0;
+        // });
+
+        function send_data() {
+            scangamepads()
+            socket.emit('my event', {data: updateStatus()});
+            window.requestAnimationFrame(send_data);
+        };
+        window.requestAnimationFrame(send_data);
+    });
 
 </script>
 
