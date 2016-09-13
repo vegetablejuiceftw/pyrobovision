@@ -104,22 +104,22 @@ def config(camera_id):
     cameras.set_slave_properties(camera_id, channel, LOWER, UPPER)
     return 'Mkay, yes, a response, I guess I can do that.'
 
-gamepad_state = {}
-@socketio.on('my event', namespace='/test')
-def test_message(message):
+#gamepad_state = {}
+#@socketio.on('my event', namespace='/test')
+#def test_message(message):
     #gamepad_state = message['data']
-    data =  json.loads(message['data'])
-    print( list(data.values())[0]['axis'] )
+#    data =  json.loads(message['data'])
+#    print( list(data.values())[0]['axis'] )
     #print(json.loads(message['data']), type(message['data']),'asss')
-    emit('my response', {'data': message['data']})
+#    emit('my response', {'data': message['data']})
 
-@socketio.on('connect', namespace='/test')
-def test_connect():
-    emit('my response', {'data': 'Connected'})
+#@socketio.on('connect', namespace='/test')
+#def test_connect():
+#    emit('my response', {'data': 'Connected'})
 
-@socketio.on('disconnect', namespace='/test')
-def test_disconnect():
-    print('Client disconnected')
+#@socketio.on('disconnect', namespace='/test')
+#def test_disconnect():
+#    print('Client disconnected')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, use_reloader=False, threaded=True)

@@ -162,20 +162,37 @@
     $(document).ready(function () {
         console.log('start!!!!!!!!!!!')
 
+		socket = new WebSocket('ws:'+window.location.host);
+		function send_data() {
+		    scangamepads();
+			socket.send(updateStatus());
+	//        console.info("Sending:", updateStatus());
+		    window.requestAnimationFrame(send_data);
+		};
+
+
+		socket.onopen = function (event) {
+			console.log("connected");
+		    window.requestAnimationFrame(send_data);
+		};
+		socket.onerror = function (error) {
+		    console.log('WebSocket Error: ');
+			console.log(error);
+		};
+		socket.onclose = function (event) {
+			console.log(event);
+		};  
+
+
         // setInterval(scangamepads, 500);
 
-        var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+        //var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
         // socket.on('my response', function(msg) {
         //     // console.log('<p>Received: ' + msg.data + '</p>');
         //     0;
         // });
 
-        function send_data() {
-            scangamepads()
-            socket.emit('my event', {data: updateStatus()});
-            window.requestAnimationFrame(send_data);
-        };
-        window.requestAnimationFrame(send_data);
+
     });
 
 </script>
