@@ -4,6 +4,7 @@ from time import time, sleep
 import numpy
 import cv2
 
+#https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/
 # https://github.com/gebart/python-v4l2capture/blob/master/capture_video.py
 class Grabber:
 

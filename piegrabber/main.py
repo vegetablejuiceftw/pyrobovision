@@ -1,11 +1,12 @@
-from threading import Thread, Event
 import cv2
-from time import time, sleep
 import numpy
+from time import time, sleep
+from threading import Thread, Event
+
 from flask import Flask, render_template, Response, request
 
-#https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/
 from camera import Grabber
+
 class FrameThread(Thread):
     def __init__(self, width=640, height=480, capture_rate=50, key=0):
         Thread.__init__(self)
@@ -22,7 +23,6 @@ class FrameThread(Thread):
             start = time()
             uv = grabber.read()            
             
-            #cv2.imwrite("frame.jpg", grabber.image)
             blurred_uv = uv        
             blurred_uv = cv2.blur(uv, (4,4))  # kills perf but smooths the picture
             mask = cv2.inRange(blurred_uv, (60, 160), (90, 255))  ## FILTER THE COLORS!!
@@ -38,9 +38,10 @@ class FrameThread(Thread):
             self.fps = round(1 / (time()-start)), round(time()-start,4 )
             c = (c+1)%20
             if not c:
-                print("fps:",self.fps)
-                print("center: {} radious: {}".format(self.center, self.radius))
-                self.frame = grabber.image
+                #print("fps: {} center: {} radious: {}".format(self.fps,self.center, self.radius))
+                frame = grabber.image
+                self.frame = cv2.bitwise_and(frame,frame, mask=mask)
+                 
             
             
 camera = FrameThread()
@@ -57,9 +58,6 @@ def both():
         while True:
             frame = camera.frame
             try:
-                #frame = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_YUYV)
-                #if type(frame) != None:
-                #    #cv2.imwrite("frame.jpg", frame)
                 ret, jpeg = cv2.imencode('.jpg', frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
                 yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
                 print('+web fps',camera.fps)
