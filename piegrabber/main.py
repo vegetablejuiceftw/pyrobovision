@@ -38,9 +38,9 @@ class FrameThread(Thread):
             self.fps = round(1 / (time()-start)), round(time()-start,4 )
             c = (c+1)%20
             if not c:
+                
                 #print("fps: {} center: {} radious: {}".format(self.fps,self.center, self.radius))
-                frame = grabber.image
-                self.frame = cv2.bitwise_and(frame,frame, mask=mask)
+                self.frame = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
                  
             
             
