@@ -9,7 +9,8 @@ from camera import Grabber
 from process import process
 
 class FrameThread(Thread):
-    def __init__(self, width=640, height=480, capture_rate=50, key=0):
+    """ Some capture rates might not work on all devices """
+    def __init__(self, width=640, height=480, capture_rate=60, key=0):
         Thread.__init__(self)
         self.width, self.height, self.capture_rate = width, height, capture_rate
         self.daemon = True        
@@ -32,19 +33,19 @@ class FrameThread(Thread):
                 ms = (time()-start)/60
                 self.fps = round(1 / (ms)), round(ms,4 )
                 start = time()
-
+                # TODO: use .get
                 print(self.fps, result['ms'])
                 self.frame = numpy.hstack([cv2.cvtColor(result['masks'][0], cv2.COLOR_GRAY2RGB), grabber.image])
                      
             
             
 camera = FrameThread()
-# camera = FrameThread(width=320,height=240,capture_rate=200)
+#camera = FrameThread(width=320,height=240,capture_rate=186)
 
 # sleep(40)
 
 app = Flask(__name__)
-SLEEP_TIME = 0.09
+SLEEP_TIME = 0.016
 
 @app.route('/')
 def both():
