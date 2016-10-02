@@ -7,7 +7,8 @@ from multiprocessing import sharedctypes,Value
 from tempfile import mkdtemp
 import os.path as path
 
-from ass import Grabber
+from camera import Grabber
+from process import process
 
 SAMPLE_SIZE = 200
 class FrameGrabber(Process):
@@ -33,7 +34,7 @@ class FrameGrabber(Process):
                 fps = SAMPLE_SIZE/sum(self.scan_times)
                 factor = self.missed_count/COUNTER.value
                 real_fps = fps * (1-factor)
-                print("real:{:.1f}, fps:{:.4f}, frame#:{}, factor:real:{:.4f}".format(real_fps, fps,COUNTER.value,factor))
+                print("real:{:.1f}, fps:{:.4f}, frame#:{}, factor:{:.4f}".format(real_fps, fps,COUNTER.value,factor))
 
             self.scan_times[COUNTER.value % SAMPLE_SIZE] = time() - start
 
@@ -60,18 +61,7 @@ class Worker(Process):
                 continue           
 
             np.copyto(temp_array,self.frame_pointer)         
-            blurred_uv = cv2.blur(temp_array, (4,4))  
-
-            # mask = cv2.inRange(blurred_uv, (60, 160), (90, 255))  ## FILTER THE COLORS!!           
-            mask = cv2.inRange(blurred_uv, (0, 0), (90, 255))  ## FILTER THE COLORS!!           
-            mask = cv2.dilate(mask, None, iterations=2)
-            cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-            if cnts:
-                contour = max(cnts, key=cv2.contourArea)   
-                print(cv2.minEnclosingCircle(contour))            
-
-            #cv2.imwrite('derp_{}.jpg'.format(self.name), mask)
- 
+            process(temp_array)
 
 COUNTER = Value('i', 0)
 TAKEN_COUNTER = Value('i', 0)
@@ -94,6 +84,6 @@ if __name__ == '__main__':
 
     fp = np.memmap(FILE_NAME, dtype='uint8', mode='r+', shape=SHAPE)
 
-    for i in range(3): 
+    for i in range(5): 
         grabber = Worker(fp,COUNTER,name='W'+str(i))
         grabber.start()

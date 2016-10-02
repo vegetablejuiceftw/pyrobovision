@@ -3,7 +3,6 @@ import v4l2capture
 from time import time, sleep
 import numpy
 import cv2
-
 #https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/
 # https://github.com/gebart/python-v4l2capture/blob/master/capture_video.py
 class Grabber:
@@ -25,7 +24,7 @@ class Grabber:
         # Create a buffer to store image data in. This must be done before
         # calling 'start' if v4l2capture is compiled with libv4l2. Otherwise
         # raises IOError.
-        print(video.create_buffers(5))
+        print(video.create_buffers(10))
 
         # Send the buffer to the device. Some devices require this to be done
         # before calling 'start'.
