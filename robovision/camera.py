@@ -35,7 +35,8 @@ class CameraMaster:
 
     def get_slave_photo(self, camera_id, mode=0, TILE_SIZE=(320, 240)):
         camera = self.alive_slaves.get(camera_id)
-        frame = camera.frame
+        frame = camera.frame  # .copy()
+
         if mode == CameraMaster.VIDEO_MODE:
             pass
         elif mode == CameraMaster.DEBUG_MODE:
@@ -43,13 +44,16 @@ class CameraMaster:
         elif mode == CameraMaster.COMBO_MODE:
             cutout = cv2.bitwise_and(frame, frame, mask=camera.debug_frame)
             frame = np.vstack([frame, cutout])
+
         stack_height = 2 if mode == CameraMaster.COMBO_MODE else 1
         tile_size = (TILE_SIZE[0], TILE_SIZE[1] * stack_height)
         frame = cv2.resize(frame, tile_size)
         cv2.putText(frame, "%.01f fps cam%s" % (camera.fps, camera_id), (10, 50), FONT, 1, FONT_COLOR, 1)
-        center = int(camera.center[0] * TILE_SIZE[0]), int(camera.center[1] * TILE_SIZE[1])
-        cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 1)
-        cv2.circle(frame, center, int(camera.radius * TILE_SIZE[0]), (0, 0, 255), 5)
+        if camera.center and camera.radius:
+            center = int(camera.center[0] * TILE_SIZE[0]), int(camera.center[1] * TILE_SIZE[1])
+            cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 1)
+            cv2.circle(frame, center, int(camera.radius * TILE_SIZE[0]), (0, 0, 255), 5)
+
         return frame
 
     def get_group_photo(self, mode=0, TILE_SIZE=(320, 240)):
@@ -74,14 +78,14 @@ class CameraMaster:
 
 
 class FrameGrabber(Thread):
-    def __init__(self, width=640, height=480, key=None):
+    def __init__(self, width=640, height=480, capture_rate=60, key=None):
         Thread.__init__(self)
         self.daemon = True
         self.running = False
         self.camera = None
 
         self.key = key
-        self.width, self.height = width, height
+        self.width, self.height, self.capture_rate = width, height, capture_rate
         self.BALL_LOWER = (0, 140, 140)
         self.BALL_UPPER = (10, 255, 255)
 
@@ -92,27 +96,20 @@ class FrameGrabber(Thread):
         self.scan_times = [0] * 40
 
         self.c_ms = 0
-        self.center = (-1, -1)
-        self.radius = -1
+        self.center = None  #(0..1 float,0..1 float,)
+        self.radius = None   # 0..1 float
         self.frame = None
         self.debug_frame = None
 
-        self.start()
-
-    def connect_camera(self):
-        temp_camera = cv2.VideoCapture(self.key)
-        _, _ = temp_camera.read()
-        sleep(0.08)
-        success, _ = temp_camera.read()
-        print('cam{} running:{}'.format(self.key, success))
-        if not success: return
-
-        self.camera = temp_camera
+        self.camera = cv2.VideoCapture(self.key)
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
-        self.camera.set(cv2.CAP_PROP_FPS, 60)
-        self.running = True
+        self.camera.set(cv2.CAP_PROP_FPS, self.capture_rate)
+        self.running, _ = self.camera.read()
+        print('cam{} running:{}'.format(self.key, self.running))
 
+        self.start()
+        
     def set_channel(self, channel, LOWER, UPPER):
         index = ['H', 'S', 'V'].index(channel)
         L, U = list(self.BALL_LOWER), list(self.BALL_UPPER)
@@ -121,7 +118,6 @@ class FrameGrabber(Thread):
         self.BALL_UPPER = tuple(U)
 
     def run(self):
-        self.connect_camera()
         while self.running:
             self.process_frame()
             self.tick_fps()
