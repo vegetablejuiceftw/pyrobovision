@@ -57,6 +57,9 @@ class CameraMaster:
         return frame
 
     def get_group_photo(self, mode=0, TILE_SIZE=(320, 240)):
+        if mode == CameraMaster.VIDEO_MODE:
+            TILE_SIZE = tuple(d*2 for d in TILE_SIZE)
+            
         frames = list(self.get_slave_photo(c_key, mode=mode, TILE_SIZE=TILE_SIZE) for c_key in self.alive_slaves.keys())
         if len(frames) == 1:
             return frames[0]
@@ -134,7 +137,7 @@ class FrameGrabber(Thread):
     @property
     def rgb_frame(self):
         return self.pure_frame
-        
+
     def capture_frame(self):
         success, frame = self.camera.read()
         self.pure_frame = frame
