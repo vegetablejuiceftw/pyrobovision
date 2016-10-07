@@ -35,7 +35,7 @@ class CameraMaster:
 
     def get_slave_photo(self, camera_id, mode=0, TILE_SIZE=(320, 240)):
         camera = self.alive_slaves.get(camera_id)
-        frame = camera.frame  # .copy()
+        frame = camera.rgb_frame  # .copy()
 
         if mode == CameraMaster.VIDEO_MODE:
             pass
@@ -131,8 +131,13 @@ class FrameGrabber(Thread):
                 'rate {}: cap={:.4f} process={:.4f} fps={:.1f} '.format(self.key, self.c_ms, sum(self.scan_times) / 40,
                                                                         self.fps))
 
+    @property
+    def rgb_frame(self):
+        return self.pure_frame
+        
     def capture_frame(self):
         success, frame = self.camera.read()
+        self.pure_frame = frame
         self.running = success
         start = time()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
