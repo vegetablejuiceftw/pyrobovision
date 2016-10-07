@@ -98,8 +98,17 @@ def config(camera_id):
     UPPER = int(request.form.get('UPPER'))
     print('config', channel, LOWER, UPPER)
 
-    cameras.set_slave_properties(camera_id, channel, LOWER, UPPER)
+    data = {"channel": (channel, LOWER, UPPER)}
+    cameras.set_slave_properties(camera_id, data)
+
     return 'Mkay, yes, a response, I guess I can do that.'
+
+
+@app.route('/iter/<path:camera_id>', methods=['get', 'post'])
+def iter(camera_id):
+    camera_id = int(camera_id)
+
+    return str(cameras.set_slave_properties(camera_id, {"order": -1}))
 
 
 if __name__ == '__main__':

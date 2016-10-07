@@ -16,6 +16,7 @@ class CameraMaster:
 
     def __init__(self):
         self.slaves = {}
+        self.order_counter = 0
         self.spawn_slaves()
         configman.load_camera_config(self.slaves)
 
@@ -48,7 +49,7 @@ class CameraMaster:
         stack_height = 2 if mode == CameraMaster.COMBO_MODE else 1
         tile_size = (TILE_SIZE[0], TILE_SIZE[1] * stack_height)
         frame = cv2.resize(frame, tile_size)
-        cv2.putText(frame, "%.01f fps cam%s" % (camera.fps, camera_id), (10, 50), FONT, 1, FONT_COLOR, 3)
+        cv2.putText(frame, "%.01f fps cam%s" % (camera.fps, camera.order), (10, 50), FONT, 1, FONT_COLOR, 3)
         if camera.center and camera.radius:
             center = int(camera.center[0] * TILE_SIZE[0]), int(camera.center[1] * TILE_SIZE[1])
             cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 3)
@@ -59,7 +60,7 @@ class CameraMaster:
     def get_group_photo(self, mode=0, TILE_SIZE=(320, 240)):
         if mode == CameraMaster.VIDEO_MODE:
             TILE_SIZE = tuple(d*2 for d in TILE_SIZE)
-            
+
         frames = list(self.get_slave_photo(c_key, mode=mode, TILE_SIZE=TILE_SIZE) for c_key in self.alive_slaves.keys())
         if len(frames) == 1:
             return frames[0]
@@ -74,10 +75,25 @@ class CameraMaster:
     def get_slaves_list(self):
         return list(self.alive_slaves.items())
 
-    def set_slave_properties(self, camera_id, channel, LOWER, UPPER):
-        camera = self.slaves.get(camera_id)
-        camera.set_channel(channel, LOWER, UPPER)
-        configman.save_camera_config(self.slaves.values())
+    def set_slave_properties(self, camera_id, data):
+        camera = self.alive_slaves.get(camera_id)
+        if not camera: return
+
+        channel = data.get("channel")
+        if channel:
+            channel, LOWER, UPPER = channel
+            camera.set_channel(channel, LOWER, UPPER)
+            configman.save_camera_config(self.slaves.values())
+
+        order = data.get("order")
+        if order:
+            if order == -1:
+                order = self.order_counter
+                self.order_counter = (order + 1 ) % len(self.alive_slaves)
+            camera.order = order
+            return order
+            
+
 
 
 class FrameGrabber(Thread):
@@ -98,6 +114,7 @@ class FrameGrabber(Thread):
         self.debug_frame = None
 
         self.key = key
+        self.order = self.key
         self.width, self.height, self.capture_rate = width, height, capture_rate
 
         self.camera = cv2.VideoCapture(self.key)
@@ -105,7 +122,7 @@ class FrameGrabber(Thread):
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         self.camera.set(cv2.CAP_PROP_FPS, self.capture_rate)
         self.running, frame = self.camera.read()
-        print("Camera {} was got {}".format(self.key, self.running))
+        print("Camera {} was initilized as run:{} res:{} fps:{}".format(self.key, self.running,(height, width), capture_rate))
 
         Thread.__init__(self)
         self.daemon = True

@@ -15,7 +15,7 @@
         </div>
         {% for key,camera in camera_list %}
                 <div class="floatBlock">
-                    <h2><i class="fa fa-camera">: </i>{{ key }}</h2>
+                    <h2><i class="fa fa-camera" onclick='iterIndex({{ key }});'>: </i><span id="camera-{{ key }}">{{ key }}</span></h2>
                     <div class="no-ui-slider">
                         <div class="slider" id='{{ key }}' data-channel="H" data-min="0" data-max="180"
                              data-start='{{ camera.BALL_LOWER[0] }}'
@@ -48,6 +48,15 @@
                 $(camera).attr("src","");
                 $(camera).attr("src",url);
             }
+        }
+        function iterIndex(camera) {
+            $.ajax({
+                url: "/iter/" + camera,
+                type: 'POST',
+                success: function(response) {
+                   $( "#camera-"+camera ).text(response);
+                }
+            });
         }
     </script>
 {% endblock %}
