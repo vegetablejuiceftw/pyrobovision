@@ -48,10 +48,10 @@ class CameraMaster:
         stack_height = 2 if mode == CameraMaster.COMBO_MODE else 1
         tile_size = (TILE_SIZE[0], TILE_SIZE[1] * stack_height)
         frame = cv2.resize(frame, tile_size)
-        cv2.putText(frame, "%.01f fps cam%s" % (camera.fps, camera_id), (10, 50), FONT, 1, FONT_COLOR, 1)
+        cv2.putText(frame, "%.01f fps cam%s" % (camera.fps, camera_id), (10, 50), FONT, 1, FONT_COLOR, 3)
         if camera.center and camera.radius:
             center = int(camera.center[0] * TILE_SIZE[0]), int(camera.center[1] * TILE_SIZE[1])
-            cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 1)
+            cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 3)
             cv2.circle(frame, center, int(camera.radius * TILE_SIZE[0]), (0, 0, 255), 5)
 
         return frame
@@ -78,14 +78,7 @@ class CameraMaster:
 
 
 class FrameGrabber(Thread):
-    def __init__(self, width=640, height=480, capture_rate=60, key=None):
-        Thread.__init__(self)
-        self.daemon = True
-        self.running = False
-        self.camera = None
-
-        self.key = key
-        self.width, self.height, self.capture_rate = width, height, capture_rate
+    def __init__(self, width=640, height=480, capture_rate=30, key=None):        
         self.BALL_LOWER = (0, 140, 140)
         self.BALL_UPPER = (10, 255, 255)
 
@@ -101,13 +94,18 @@ class FrameGrabber(Thread):
         self.frame = None
         self.debug_frame = None
 
+        self.key = key
+        self.width, self.height, self.capture_rate = width, height, capture_rate
+
         self.camera = cv2.VideoCapture(self.key)
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         self.camera.set(cv2.CAP_PROP_FPS, self.capture_rate)
-        self.running, _ = self.camera.read()
-        print('cam{} running:{}'.format(self.key, self.running))
+        self.running, frame = self.camera.read()
+        print("Camera {} was got {}".format(self.key, self.running))
 
+        Thread.__init__(self)
+        self.daemon = True
         self.start()
         
     def set_channel(self, channel, LOWER, UPPER):
@@ -116,6 +114,7 @@ class FrameGrabber(Thread):
         L[index], U[index] = LOWER, UPPER
         self.BALL_LOWER = tuple(L)
         self.BALL_UPPER = tuple(U)
+        print("GOT BALLS")
 
     def run(self):
         while self.running:
@@ -134,13 +133,16 @@ class FrameGrabber(Thread):
 
     def capture_frame(self):
         success, frame = self.camera.read()
+        self.running = success
         start = time()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         self.c_ms = time() - start
-        return hsv
+        return success, hsv
 
     def process_frame(self):
-        frame = self.capture_frame()
+        success, frame = self.capture_frame()
+        if not success: return 
+
         start = time()
         frame = cv2.blur(frame, (4, 4))
         mask = cv2.inRange(frame, self.BALL_LOWER, self.BALL_UPPER)
