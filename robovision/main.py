@@ -110,6 +110,13 @@ def iter(camera_id):
 
     return str(cameras.set_slave_properties(camera_id, {"order": -1}))
 
+# socket shit
+
+socketio = SocketIO(app)
+
+
+@sockets.route('/')
+def command(ws):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, use_reloader=False, threaded=True)

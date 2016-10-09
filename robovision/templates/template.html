@@ -165,14 +165,16 @@
         }
     }
     var controllers = {};
+    const socked_addr = "ws://"+document.domain + ':' + (parseInt(location.port)+1);
     $(document).ready(function () {
-        console.log('start!!!!!!!!!!!')
+        console.log(' websocket loop start!!!!!!!!!!!', window.location.host)
 
-		socket = new WebSocket('ws:'+window.location.host);
+        socket = new WebSocket(socked_addr);
 		function send_data() {
 		    scangamepads();
-			socket.send(updateStatus());
-	//        console.info("Sending:", updateStatus());
+            var status = updateStatus();
+			socket.send(status);
+	       console.info("Sending:", status);
 		    window.requestAnimationFrame(send_data);
 		};
 
@@ -188,20 +190,11 @@
 		socket.onclose = function (event) {
 			console.log(event);
 		};  
-
-
-        // setInterval(scangamepads, 500);
-
-        //var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-        // socket.on('my response', function(msg) {
-        //     // console.log('<p>Received: ' + msg.data + '</p>');
-        //     0;
-        // });
-
-
     });
 
+
 </script>
+
 
 {% block extra_scripts %}
 {% endblock %}
