@@ -112,11 +112,11 @@ def iter(camera_id):
 
 # socket shit
 
-socketio = SocketIO(app)
+# socketio = SocketIO(app)
 
 
-@sockets.route('/')
-def command(ws):
+# @sockets.route('/')
+# def command(ws):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, use_reloader=False, threaded=True)

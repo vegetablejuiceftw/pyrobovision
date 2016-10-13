@@ -92,8 +92,10 @@ class CameraMaster:
                 self.order_counter = (order + 1 ) % len(self.alive_slaves)
             camera.order = order
             return order
-            
 
+    def close(self):
+        for slave in self.alive_slaves.values():
+            slave.close()
 
 
 class FrameGrabber(Thread):
@@ -127,6 +129,9 @@ class FrameGrabber(Thread):
         Thread.__init__(self)
         self.daemon = True
         self.start()
+
+    def close(self):
+        self.running = False
         
     def set_channel(self, channel, LOWER, UPPER):
         index = ['H', 'S', 'V'].index(channel)
