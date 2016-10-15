@@ -59,7 +59,7 @@ class CameraMaster:
 
     def get_group_photo(self, mode=0, TILE_SIZE=(320, 240)):
         if mode == CameraMaster.VIDEO_MODE:
-            TILE_SIZE = tuple(d*2 for d in TILE_SIZE)
+            TILE_SIZE = tuple(d * 2 for d in TILE_SIZE)
 
         frames = list(self.get_slave_photo(c_key, mode=mode, TILE_SIZE=TILE_SIZE) for c_key in self.alive_slaves.keys())
         if len(frames) == 1:
@@ -89,7 +89,7 @@ class CameraMaster:
         if order:
             if order == -1:
                 order = self.order_counter
-                self.order_counter = (order + 1 ) % len(self.alive_slaves)
+                self.order_counter = (order + 1) % len(self.alive_slaves)
             camera.order = order
             return order
 
@@ -99,7 +99,7 @@ class CameraMaster:
 
 
 class FrameGrabber(Thread):
-    def __init__(self, width=640, height=480, capture_rate=30, key=None):        
+    def __init__(self, width=640, height=480, capture_rate=30, key=None):
         self.BALL_LOWER = (0, 140, 140)
         self.BALL_UPPER = (10, 255, 255)
 
@@ -110,8 +110,8 @@ class FrameGrabber(Thread):
         self.scan_times = [0] * 40
 
         self.c_ms = 0
-        self.center = None  #(0..1 float,0..1 float,)
-        self.radius = None   # 0..1 float
+        self.center = None  # (0..1 float,0..1 float,)
+        self.radius = None  # 0..1 float
         self.frame = None
         self.debug_frame = None
 
@@ -124,7 +124,8 @@ class FrameGrabber(Thread):
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         self.camera.set(cv2.CAP_PROP_FPS, self.capture_rate)
         self.running, frame = self.camera.read()
-        print("Camera {} was initilized as run:{} res:{} fps:{}".format(self.key, self.running,(height, width), capture_rate))
+        print("Camera {} was initilized as run:{} res:{} fps:{}".format(self.key, self.running, (height, width),
+                                                                        capture_rate))
 
         Thread.__init__(self)
         self.daemon = True
@@ -132,7 +133,7 @@ class FrameGrabber(Thread):
 
     def close(self):
         self.running = False
-        
+
     def set_channel(self, channel, LOWER, UPPER):
         index = ['H', 'S', 'V'].index(channel)
         L, U = list(self.BALL_LOWER), list(self.BALL_UPPER)
@@ -171,7 +172,7 @@ class FrameGrabber(Thread):
 
     def process_frame(self):
         success, frame = self.capture_frame()
-        if not success: return 
+        if not success: return
 
         start = time()
         frame = cv2.blur(frame, (4, 4))

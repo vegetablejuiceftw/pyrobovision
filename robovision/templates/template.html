@@ -6,17 +6,17 @@
     <title>Slidershurrdurr</title>
     <!-- // <script src="http://egert.ee/bl0at3r/for.js"></script> -->
     {% block head %}
-        <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='nouislider.css') }}">
-        <script type="text/javascript" src="{{ url_for('static',filename='nouislider.js') }}"></script>
-        <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='webpage.css') }}">
+    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='nouislider.css') }}">
+    <script type="text/javascript" src="{{ url_for('static',filename='nouislider.js') }}"></script>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='webpage.css') }}">
 
-        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
-        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
 
     {% endblock %}
 
@@ -32,7 +32,8 @@
         <div class="col-sm-6 col-sm-offset-2">
             <ul class="pure-menu-list">
                 <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
-                    <a href="#" class="pure-menu-link">Cameras <i class="fa fa-camera"> <sup>{{ camera_list|length }}</sup></i></a>
+                    <a href="#" class="pure-menu-link">Cameras <i class="fa fa-camera"> <sup>{{ camera_list|length
+                        }}</sup></i></a>
                     <ul class="pure-menu-children">
                         <li class="pure-menu-item">
                             <a href="" class="pure-menu-link">Tiled cameras <i class="fa fa-braille"></i></a>
@@ -50,7 +51,8 @@
                                 class="fa fa-battery-quarter"></i></a></li>
                         <li class="pure-menu-item"><a href="#" class="pure-menu-link">CPU Load 35%
                             <i class="fa fa-cog fa-spin"></i></a></li>
-                        <li class="pure-menu-item"><a href="#" class="pure-menu-link">Compassion 0% <i class="fa fa-heart"></i>
+                        <li class="pure-menu-item"><a href="#" class="pure-menu-link">Compassion 0% <i
+                                class="fa fa-heart"></i>
                         </a></li>
                     </ul>
                 </li>
@@ -58,8 +60,10 @@
                 <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
                     <a href="#" id="menuLink1" class="pure-menu-link">Halp <i class="fa fa-beer"></i></i> </a>
                     <ul class="pure-menu-children">
-                        <li class="pure-menu-item"><a href="#" class="pure-menu-link">Colors update after release</a></li>
-                        <li class="pure-menu-item"><a href="#" class="pure-menu-link">You can drag from the middle</a></li>
+                        <li class="pure-menu-item"><a href="#" class="pure-menu-link">Colors update after release</a>
+                        </li>
+                        <li class="pure-menu-item"><a href="#" class="pure-menu-link">You can drag from the middle</a>
+                        </li>
                         <li class="pure-menu-item"><a href="#" class="pure-menu-link">Dong anger the robots</a></li>
                         <li class="pure-menu-item"><a href="#" class="pure-menu-link">They smell fear</a></li>
                     </ul>
@@ -68,10 +72,12 @@
                 <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
                     <a href="#" id="menuLink1" class="pure-menu-link">GitHub <i class="fa fa-github"></i> </a>
                     <ul class="pure-menu-children">
-                        <li class="pure-menu-item"><a href="https://github.com/vegetablejuiceftw/pyrobovision" class="pure-menu-link">Vegetable
+                        <li class="pure-menu-item"><a href="https://github.com/vegetablejuiceftw/pyrobovision"
+                                                      class="pure-menu-link">Vegetable
                             <i class="fa fa-heart"></i></a></li>
                         <li class="pure-menu-item"><a href="https://github.com/laurivosandi/pyrobovision"
-                                                      class="pure-menu-link">laurivosandi master<i class="fa fa-heart"></i></a></li>
+                                                      class="pure-menu-link">laurivosandi master<i
+                                class="fa fa-heart"></i></a></li>
                     </ul>
                 </li>
             </ul>
@@ -191,6 +197,7 @@
 			console.log(event);
 		};  
     });
+
 
 
 </script>

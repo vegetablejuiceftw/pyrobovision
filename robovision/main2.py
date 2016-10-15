@@ -15,15 +15,18 @@ from flask import Flask, render_template, Response, request
 
 from flask_socketio import SocketIO, emit
 
-
 import asyncio
 import websockets
 
 from pymatamotor import Motor
 from camera import CameraMaster
+from nutgobbler import BallSucker
 
 # try to load motor 
 motor_driver = Motor()
+
+# try to load brains
+BallSucker(motor_driver)
 
 # try to load cameruhs
 cameras = CameraMaster()
@@ -32,17 +35,17 @@ print('Cameras working:', cameras.slave_count)
 # handle shut down signals, as this is a threaded mess of a system
 server = None
 
+
 def signal_handler(sig, frame):
     motor_driver.close()
     server.close()
     cameras.close()
     exit(signal.SIGTERM)
-    
+
+
 signal.signal(signal.SIGINT, signal_handler)
 
-
-
-# initiate web services 
+# initiate web services
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -52,6 +55,7 @@ SLEEP_TIME = 0.08
 @app.route('/combined/<path:type_str>')
 def video_combined(type_str):
     TYPES = ['VIDEO', 'DEBUG', 'COMBO']
+
     def generator():
         while True:
             last_frame = cameras.get_group_photo(mode=TYPES.index(type_str.upper()))
@@ -65,6 +69,7 @@ def video_combined(type_str):
 @app.route('/video/<path:camera_id>')
 def video(camera_id):
     camera_id = int(camera_id)
+
     def generator():
         while True:
             last_frame = cameras.get_slave_photo(camera_id)
@@ -78,6 +83,7 @@ def video(camera_id):
 @app.route('/debug/<path:camera_id>')
 def debug(camera_id):
     camera_id = int(camera_id)
+
     def generator():
         while True:
             last_frame = cameras.get_slave_photo(camera_id, mode=CameraMaster.DEBUG_MODE)
@@ -91,6 +97,7 @@ def debug(camera_id):
 @app.route('/both/<path:camera_id>')
 def both(camera_id):
     camera_id = int(camera_id)
+
     def generator():
         while True:
             last_frame = cameras.get_slave_photo(camera_id, mode=CameraMaster.COMBO_MODE)
@@ -144,7 +151,7 @@ def iter(camera_id):
 
 
 class Bread(Thread):
-    def __init__(self):        
+    def __init__(self):
         Thread.__init__(self)
         self.daemon = True
         self.start()
@@ -154,11 +161,11 @@ class Bread(Thread):
         app.run(host='0.0.0.0', debug=True, use_reloader=False, threaded=True)
 
     def close(self):
-        pass # no wai to kill
-        #app.stop(timeout=5)
+        pass  # no wai to kill
+        # app.stop(timeout=5)
+
 
 server = Bread()
-
 
 
 # initiate web sockets
@@ -168,26 +175,26 @@ async def time(websocket, path):
         try:
             await websocket.send("hello")
             command = await websocket.recv()
-            response = json.loads(command) 
+            response = json.loads(command)
         except:
             print("Did it dieded? :(")
             break
 
         for k in response:
             gamepad = response[k]
-            
+
             axis = gamepad.get("axis")
             if not axis:
                 continue
 
-            a,b,right_joystick_x,d,e,f = [axis.get(j,0) for j in "012345"]
+            a, b, right_joystick_x, d, e, f = [axis.get(j, 0) for j in "012345"]
 
             data = {
-                'R': right_joystick_x,
+                'Fw': right_joystick_x,
                 'Fx': a,
-                'Fy': b,             
+                'Fy': b,
             }
-            #print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{R:.4f}".format(**data))
+            # print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{R:.4f}".format(**data))
             motor_driver.load_data(data)
 
 
@@ -195,5 +202,3 @@ start_server = websockets.serve(time, '0.0.0.0', 5001)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
-
-
