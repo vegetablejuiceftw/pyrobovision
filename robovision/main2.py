@@ -28,14 +28,14 @@ print('Cameras working:', cameras.slave_count)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 SLEEP_TIME = 0.08
-
+flask_running = True
 
 @app.route('/combined/<path:type_str>')
 def video_combined(type_str):
     TYPES = ['VIDEO', 'DEBUG', 'COMBO']
 
     def generator():
-        while True:
+        while flask_running:
             last_frame = cameras.get_group_photo(mode=TYPES.index(type_str.upper()))
             ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
@@ -49,7 +49,7 @@ def video(camera_id):
     camera_id = int(camera_id)
 
     def generator():
-        while True:
+        while flask_running:
             last_frame = cameras.get_slave_photo(camera_id)
             ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
@@ -63,7 +63,7 @@ def debug(camera_id):
     camera_id = int(camera_id)
 
     def generator():
-        while True:
+        while flask_running:
             last_frame = cameras.get_slave_photo(camera_id, mode=CameraMaster.DEBUG_MODE)
             ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
@@ -77,7 +77,7 @@ def both(camera_id):
     camera_id = int(camera_id)
 
     def generator():
-        while True:
+        while flask_running:
             last_frame = cameras.get_slave_photo(camera_id, mode=CameraMaster.COMBO_MODE)
             ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
@@ -147,7 +147,9 @@ server = Bread()
 
 # handle shut down signals, as this is a threaded mess of a system
 def signal_handler(sig, frame):
+    global flask_running
     motor_driver.close()
+    flask_running = False
     server.close()
     cameras.close()
     exit(0)
@@ -166,22 +168,24 @@ async def time(websocket, path):
         except:
             print("Did it dieded? :(")
             break
-
         for k in response:
             gamepad = response[k]
 
-            axis = gamepad.get("axis")
-            if not axis:
-                continue
-
+            axis = gamepad.get("axis",  {})
             a, b, right_joystick_x, d, e, f = [axis.get(j, 0) for j in "012345"]
+
+            button = gamepad.get("button", {})
+            kicker = any([button.get(key, [False, False])[0] for key in '45']) # left-4 & right-5 trigger
+            if kicker: print("KICKEEER")
+
 
             data = {
                 'Fw': right_joystick_x,
                 'Fx': a,
                 'Fy': b,
+                'K': kicker,
             }
-            print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{Fw:.4f}".format(**data))
+            # print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{Fw:.4f}".format(**data))
             motor_driver.load_data(data)
 
 

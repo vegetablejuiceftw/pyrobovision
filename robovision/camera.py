@@ -18,6 +18,7 @@ class CameraMaster:
         self.slaves = {}
         self.order_counter = 0
         self.spawn_slaves()
+        self.running = True
         configman.load_camera_config(self.slaves)
 
     @property
@@ -35,6 +36,8 @@ class CameraMaster:
             self.slaves[camera_id] = FrameGrabber(key=index)
 
     def get_slave_photo(self, camera_id, mode=0, TILE_SIZE=(320, 240)):
+        if not self.running: return
+
         camera = self.alive_slaves.get(camera_id)
         frame = camera.rgb_frame  # .copy()
 
@@ -58,6 +61,8 @@ class CameraMaster:
         return frame
 
     def get_group_photo(self, mode=0, TILE_SIZE=(320, 240)):
+        if not self.running: return
+
         if mode == CameraMaster.VIDEO_MODE:
             TILE_SIZE = tuple(d * 2 for d in TILE_SIZE)
 
@@ -94,6 +99,7 @@ class CameraMaster:
             return order
 
     def close(self):
+        self.running = False
         for slave in self.alive_slaves.values():
             slave.close()
 
