@@ -1,28 +1,19 @@
 from __future__ import print_function
-from threading import Thread
 from time import sleep
-import imp
 import json
-import os
 import cv2
-import numpy
-
-from PyMata.pymata import PyMata
 from threading import Thread, Event
 import signal
-
 from flask import Flask, render_template, Response, request
-
-from flask_socketio import SocketIO, emit
-
 import asyncio
 import websockets
 
-from pymatamotor import Motor
+
+# try to load motor
 from camera import CameraMaster
 from nutgobbler import BallSucker
+from pymatamotor import Motor
 
-# try to load motor 
 motor_driver = Motor()
 
 # try to load brains
@@ -32,21 +23,8 @@ BallSucker(motor_driver)
 cameras = CameraMaster()
 print('Cameras working:', cameras.slave_count)
 
-# handle shut down signals, as this is a threaded mess of a system
-server = None
-
-
-def signal_handler(sig, frame):
-    motor_driver.close()
-    server.close()
-    cameras.close()
-    exit(signal.SIGTERM)
-
-
-signal.signal(signal.SIGINT, signal_handler)
 
 # initiate web services
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 SLEEP_TIME = 0.08
@@ -167,6 +145,15 @@ class Bread(Thread):
 
 server = Bread()
 
+# handle shut down signals, as this is a threaded mess of a system
+def signal_handler(sig, frame):
+    motor_driver.close()
+    server.close()
+    cameras.close()
+    exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
 
 # initiate web sockets
 
@@ -194,7 +181,7 @@ async def time(websocket, path):
                 'Fx': a,
                 'Fy': b,
             }
-            # print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{R:.4f}".format(**data))
+            print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{Fw:.4f}".format(**data))
             motor_driver.load_data(data)
 
 

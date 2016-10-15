@@ -1,5 +1,4 @@
 import numpy
-import signal
 import serial
 from threading import Thread
 from time import sleep

@@ -12,8 +12,7 @@ for j in range(10):
     if not success:
         continue
     captures.append(video)
-    print
-    "camera {} initialized {}".format(j, success)
+    print("camera {} initialized {}".format(j, success))
 
 if not len(captures) == 8:
     raise Exception("you are stupid")
@@ -26,8 +25,7 @@ last_served = None
 while True:
     now = time()
     if now - last > 2:
-        print
-        "%d fps" % (count * 1.0 / (now - last))
+        print("%d fps" % (count * 1.0 / (now - last)))
         last = now
         count = 0
     count += 1
