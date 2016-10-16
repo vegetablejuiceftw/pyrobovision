@@ -10,18 +10,18 @@ from math import cos, sin, radians, atan2, pi
 class Motor(Thread):
 	# Motor pins on Arduino
 	MOTOR_1_PWM = 11
-	MOTOR_2_PWM = 10
-	MOTOR_3_PWM = 9
+	MOTOR_2_PWM = 9
+	MOTOR_3_PWM = 10
 
 	MOTOR_1_A = 5
-	MOTOR_2_A = 7
-	MOTOR_3_A = 6
+	MOTOR_2_A = 6
+	MOTOR_3_A = 7
 
 	MOTOR_1_B = 8
-	MOTOR_2_B = 4
-	MOTOR_3_B = 3
+	MOTOR_2_B = 3
+	MOTOR_3_B = 4
 
-	KICKER = 12
+	KICKER = 14
 
 	def __init__(self, *args, **kwargs):
 		Thread.__init__(self)
@@ -74,6 +74,8 @@ class Motor(Thread):
 			board.set_pin_mode(self.MOTOR_3_A,   board.OUTPUT, board.DIGITAL)
 			board.set_pin_mode(self.MOTOR_3_B,   board.OUTPUT, board.DIGITAL)
 
+			board.set_pin_mode(self.KICKER,   board.OUTPUT, board.DIGITAL)
+
 			board.digital_write(self.KICKER, False)
 
 			self.board = board
@@ -114,7 +116,7 @@ class Motor(Thread):
 
 	def get_xyw(self):
 		Fx, Fy, Fw = -self.data.get('Fx', 0), self.data.get('Fy', 0), self.data.get('Fw', 0)
-		Fx, Fy, Fw = Fx * 0.25, Fy * 0.25, Fw * 0.25
+		Fx, Fy, Fw = Fx * 0.40, Fy * 0.40, Fw * 0.40
 		return Fx, Fy, Fw
 
 	def make_kick(self):
@@ -122,9 +124,10 @@ class Motor(Thread):
 
 	def translate(self):
 		Fx, Fy, Fw = self.get_xyw()
+		print(Fx,Fy,Fw)
 
 		backwards_matrix = [[-1/2,-1/2,1],[3**0.5/2,-3**0.5/2,0],[1,1,1]]
-		backwards_matrix = [[-1/2,-1/2,1],[3**0.5/2,-3**0.5/2,0],[1/3,1/3,1/3]]
+		# backwards_matrix = [[-1/2,-1/2,1],[3**0.5/2,-3**0.5/2,0],[1/3,1/3,1/3]]
 
 		matrix = numpy.linalg.inv(backwards_matrix)
 

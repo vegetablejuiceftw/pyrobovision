@@ -86,12 +86,12 @@ def both(camera_id):
     return Response(generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
+# @app.route('/')
+# def index():
+#     return render_template('main.html', camera_list=cameras.get_slaves_list())
+
+
 @app.route('/')
-def index():
-    return render_template('main.html', camera_list=cameras.get_slaves_list())
-
-
-@app.route('/group')
 def group():
     return render_template('group.html', camera_list=cameras.get_slaves_list())
 
@@ -180,9 +180,9 @@ async def time(websocket, path):
 
 
             data = {
-                'Fw': right_joystick_x,
-                'Fx': a,
-                'Fy': b,
+                'Fw': -right_joystick_x,
+                'Fx': -a, # joysticks are weird
+                'Fy': -b,
                 'K': kicker,
             }
             # print("\t\tFx{Fx:.4f}\tFy:{Fy:.4f}\tR:{Fw:.4f}".format(**data))
