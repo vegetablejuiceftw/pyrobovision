@@ -122,18 +122,11 @@ class Motor(Thread):
 
 	def translate(self):
 		Fx, Fy, Fw = self.get_xyw()
-		a,b = Fx, Fy
-		f = radians(45)
-		print(f)
-		Fx = Fx * cos(f) - Fy * sin(f)
-		Fy = Fy * cos(f) + Fx * sin(f)
 
-		angle = lambda x,y: atan2(y,x)/pi*180
-		print("Ang",angle(a,b),angle(Fx,Fy))
+		backwards_matrix = [[-1/2,-1/2,1],[3**0.5/2,-3**0.5/2,0],[1,1,1]]
+		backwards_matrix = [[-1/2,-1/2,1],[3**0.5/2,-3**0.5/2,0],[1/3,1/3,1/3]]
 
-		print((round(a,4), round(b,4)),(round(Fx,4), round(Fy,4)), )
-
-		matrix = [[0.58, -0.33, 0.33], [-0.58, -0.33, 0.33], [0, 0.67, 0.33]]
+		matrix = numpy.linalg.inv(backwards_matrix)
 
 		Fa, Fb, Fc = numpy.dot(matrix, [Fx, Fy, Fw])
 
