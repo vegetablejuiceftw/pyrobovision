@@ -189,7 +189,7 @@ class Motor(Thread):
 	def run(self):
 		print("# START MOTOR THREAD")
 		self.setup_pymata()
-		print("# LOADED PYMATA 2")
+		print("# LOADED PYMATA")
 
 		last = ()
 		while self.mock_mode:

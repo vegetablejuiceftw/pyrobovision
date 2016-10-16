@@ -7,7 +7,7 @@ from time import sleep
 # http://southpark.wikia.com/wiki/Nut_Gobbler
 class BrainFuck(Thread):
 	def __init__(self, motion_driver):
-		self.map = {} # rotation: [(itensity,x-coord)]
+		self.map = {} # rotation: [(itensity, x-coord)]
 		self.fov = 3 / 4 * 75 / 2 # 90 degrees rotated fov drift when scaled -1 to 1
 		self.motion_driver = motion_driver
 
@@ -19,9 +19,6 @@ class BrainFuck(Thread):
 	@property
 	def rotation(self): # MOCK
 		return self.motion_driver.rotation
-
-	def report(self, id, data):
-		self.map[id] = data
 		
 	def itensity(self): # MOCK
 		tuples = []
@@ -36,6 +33,11 @@ class BrainFuck(Thread):
 		Fx, Fy, Fw = cos(rotation), sin(rotation), 0
 		self.motion_driver.load_data({"Fx": Fx, "Fy": Fy})
 
+
+
+	def report(self, id, data):
+		self.map[id] = data
+
 	def run(self):
 		while self.running:
 			intensity, cx = self.map[0][0] if 0 in self.map else (-1, 0)
@@ -43,5 +45,6 @@ class BrainFuck(Thread):
 			if 0.005 > intensity or intensity > 0.25:
 				self.motion_driver.load_data({"Fx": 0, "Fy": 0, "Fw":0, "TYPE":"B"})
 			else:
-				self.motion_driver.load_data({"Fx": cx / 3, "Fy": 0.2 + round(0.25-intensity,2), "Fw": round(cx/2.3,2), "TYPE":"B"})
+				self.motion_driver.load_data({"Fx": cx, "Fy": 0.1 + round(0.25-intensity,2)*3, "Fw": cx, "TYPE":"B"})
+				# self.motion_driver.load_data({"Fx": cx / 1, "Fy": 0.2 + round(0.25-intensity,2)*2, "Fw": round(cx/1.3,2), "TYPE":"B"})
 			sleep(0.008)
