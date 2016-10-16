@@ -14,12 +14,12 @@ class CameraMaster:
     DEBUG_MODE = 1
     COMBO_MODE = 2
 
-    def __init__(self):
+    def __init__(self, brain):
+        self.brain = brain
         self.slaves = {}
         self.order_counter = 0
         self.spawn_slaves()
         self.running = True
-        configman.load_camera_config(self.slaves)
 
     @property
     def slave_count(self):
@@ -33,7 +33,8 @@ class CameraMaster:
         # loads camera, bad indices are skipped
         for index in range(10):
             camera_id = index
-            self.slaves[camera_id] = FrameGrabber(key=index)
+            self.slaves[camera_id] = FrameGrabber(key=index, brain=self.brain)
+        configman.load_camera_config(self.slaves)
 
     def get_slave_photo(self, camera_id, mode=0, TILE_SIZE=(320, 240)):
         if not self.running: return
@@ -56,7 +57,7 @@ class CameraMaster:
         if camera.center and camera.radius:
             center = int(camera.center[0] * TILE_SIZE[0]), int(camera.center[1] * TILE_SIZE[1])
             cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 3)
-            cv2.circle(frame, center, int(camera.radius * TILE_SIZE[0]), (0, 0, 255), 5)
+            cv2.circle(frame, center, int(camera.radius * TILE_SIZE[1]), (0, 0, 255), 5)
 
         return frame
 
@@ -104,8 +105,9 @@ class CameraMaster:
             slave.close()
 
 
+SAMPLE_SIZE = 300
 class FrameGrabber(Thread):
-    def __init__(self, width=640, height=480, capture_rate=30, key=None):
+    def __init__(self, width=640, height=480, capture_rate=30, key=None, brain=None):
         self.BALL_LOWER = (0, 140, 140)
         self.BALL_UPPER = (10, 255, 255)
 
@@ -113,7 +115,7 @@ class FrameGrabber(Thread):
         self.frames = 0
         self.fps = 0
 
-        self.scan_times = [0] * 40
+        self.scan_times = [0] * SAMPLE_SIZE
 
         self.c_ms = 0
         self.center = None  # (0..1 float,0..1 float,)
@@ -133,6 +135,8 @@ class FrameGrabber(Thread):
         print("Camera {} was initilized as run:{} res:{} fps:{}".format(self.key, self.running, (height, width),
                                                                         capture_rate))
 
+        self.brain = brain
+
         Thread.__init__(self)
         self.daemon = True
         self.start()
@@ -146,7 +150,6 @@ class FrameGrabber(Thread):
         L[index], U[index] = LOWER, UPPER
         self.BALL_LOWER = tuple(L)
         self.BALL_UPPER = tuple(U)
-        print("GOT BALLS")
 
     def run(self):
         while self.running:
@@ -156,11 +159,11 @@ class FrameGrabber(Thread):
     def tick_fps(self):
         self.frames += 1
         timestamp_begin = time()
-        if not self.frames % 60:
-            self.fps = 60 / (timestamp_begin - self.timestamp)
+        if not self.frames % SAMPLE_SIZE:
+            self.fps = SAMPLE_SIZE / (timestamp_begin - self.timestamp)
             self.timestamp = timestamp_begin
             print(
-                'rate {}: cap={:.4f} process={:.4f} fps={:.1f} '.format(self.key, self.c_ms, sum(self.scan_times) / 40,
+                'Camera #{}: cap={:.4f} process={:.4f} fps={:.1f} '.format(self.key, self.c_ms, sum(self.scan_times) / SAMPLE_SIZE,
                                                                         self.fps))
 
     @property
@@ -190,8 +193,14 @@ class FrameGrabber(Thread):
             c = max(cnts, key=cv2.contourArea)
             center, radius = cv2.minEnclosingCircle(c)
             self.center = center[0] / self.width, center[1] / self.height
-            self.radius = radius / self.width
+            self.radius = radius / self.height
+        else:
+            self.center = None
+            self.radius = None
+        R = self.radius or 0
+        X = self.center[1] * 2 - 1 if self.center else 0 
+        self.brain.report(self.order, [(R, X)])
 
         self.frame = frame
         self.debug_frame = mask
-        self.scan_times[self.frames % 40] = time() - start
+        self.scan_times[self.frames % SAMPLE_SIZE] = time() - start

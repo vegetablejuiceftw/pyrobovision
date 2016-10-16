@@ -27,7 +27,10 @@ def load_camera_config(camera_map):
     config = configparser.ConfigParser()
     config.read(path)
     for key in config.keys():
-        camera = camera_map.get(key)
+        try:
+            camera = camera_map.get(int(key))
+        except:
+            continue
         if camera:
             camera.set_channel('H', int(config[key]['lowerhue']), int(config[key]['higherhue']))
             camera.set_channel('S', int(config[key]['lowersaturation']), int(config[key]['highersaturation']))
