@@ -40,56 +40,12 @@ def video_combined(type_str):
             ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
             sleep(SLEEP_TIME)
-
-    return Response(generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/video/<path:camera_id>')
-def video(camera_id):
-    camera_id = int(camera_id)
-
-    def generator():
-        while flask_running:
-            last_frame = cameras.get_slave_photo(camera_id)
-            ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
-            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
-            sleep(SLEEP_TIME)
-
-    return Response(generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/debug/<path:camera_id>')
-def debug(camera_id):
-    camera_id = int(camera_id)
-
-    def generator():
-        while flask_running:
-            last_frame = cameras.get_slave_photo(camera_id, mode=CameraMaster.DEBUG_MODE)
-            ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
-            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
-            sleep(SLEEP_TIME)
-
-    return Response(generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/both/<path:camera_id>')
-def both(camera_id):
-    camera_id = int(camera_id)
-
-    def generator():
-        while flask_running:
-            last_frame = cameras.get_slave_photo(camera_id, mode=CameraMaster.COMBO_MODE)
-            ret, jpeg = cv2.imencode('.jpg', last_frame, (cv2.IMWRITE_JPEG_QUALITY, 80))
-            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tostring() + b'\r\n\r\n'
-            sleep(SLEEP_TIME)
-
     return Response(generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/')
 def group():
     return render_template('group.html', camera_list=cameras.get_slaves_list())
-
 
 # static files for js and css
 @app.route('/nouislider.css')
