@@ -1,8 +1,11 @@
-from threading import Thread
+from threading import Thread, Event
 import cv2
 from time import time, sleep
 import numpy as np
+import os
 import configman
+import cv2
+from subprocess import call, check_output
 
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_COLOR = (255, 255, 255)
@@ -31,9 +34,8 @@ class CameraMaster:
 
     def spawn_slaves(self):
         # loads camera, bad indices are skipped
-        for index in range(10):
-            camera_id = index
-            self.slaves[camera_id] = FrameGrabber(key=index, brain=self.brain)
+        for index, filename in enumerate(sorted(os.listdir("/etc/robovision/cameras"))):
+            self.slaves[index] = FrameGrabber(key=os.path.join("/etc/robovision/cameras", filename), brain=self.brain)
         configman.load_camera_config(self.slaves)
 
     def get_slave_photo(self, camera_id, mode=0, TILE_SIZE=(320, 240)):
@@ -53,7 +55,8 @@ class CameraMaster:
         stack_height = 2 if mode == CameraMaster.COMBO_MODE else 1
         tile_size = (TILE_SIZE[0], TILE_SIZE[1] * stack_height)
         frame = cv2.resize(frame, tile_size)
-        cv2.putText(frame, "%.01f fps cam%s" % (camera.fps, camera.order), (10, 50), FONT, 1, FONT_COLOR, 3)
+        cv2.putText(frame, "%s" % os.path.basename(camera.order), (10, 20), FONT, 0.7, FONT_COLOR, 2)
+        cv2.putText(frame, "%.01f fps" % camera.fps, (10, 60), FONT, 1, FONT_COLOR, 3)
         if camera.center and camera.radius:
             center = int(camera.center[0] * TILE_SIZE[0]), int(camera.center[1] * TILE_SIZE[1])
             cv2.putText(frame, "{:.3f}".format(camera.radius), center, FONT, 1, FONT_COLOR, 3)
@@ -108,8 +111,11 @@ class CameraMaster:
 SAMPLE_SIZE = 300
 class FrameGrabber(Thread):
     def __init__(self, width=640, height=480, capture_rate=30, key=None, brain=None):
+        self.pure_frame = None
+        self.frame_grabbed = Event()
         self.BALL_LOWER = (0, 140, 140)
         self.BALL_UPPER = (10, 255, 255)
+
 
         self.timestamp = time()
         self.frames = 0
@@ -131,6 +137,27 @@ class FrameGrabber(Thread):
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         self.camera.set(cv2.CAP_PROP_FPS, self.capture_rate)
+
+        # print('CAP_PROP_CONTRAST',self.camera.get(cv2.CAP_PROP_CONTRAST))
+        # print('CAP_PROP_BRIGHTNESS',self.camera.get(cv2.CAP_PROP_BRIGHTNESS))
+        # print('CAP_PROP_SATURATION',self.camera.get(cv2.CAP_PROP_SATURATION))
+        # print('CAP_PROP_HUE',self.camera.get(cv2.CAP_PROP_HUE))
+
+        self.camera.set(cv2.CAP_PROP_CONTRAST, 0.125)
+        self.camera.set(cv2.CAP_PROP_BRIGHTNESS, 0.0)
+        self.camera.set(cv2.CAP_PROP_SATURATION, 0.250)
+        self.camera.set(cv2.CAP_PROP_HUE, 0.5)
+
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "gain_automatic=0"])
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "gain=5"])
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "white_balance_automatic=1"])
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "brightness=25"])
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "saturation=80"])
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "auto_exposure=1"])
+
+        call(["v4l2-ctl", "-d", self.key, "--set-ctrl", "exposure=100"])
+
+
         self.running, frame = self.camera.read()
         print("Camera {} was initilized as run:{} res:{} fps:{}".format(self.key, self.running, (height, width),
                                                                         capture_rate))
@@ -155,6 +182,8 @@ class FrameGrabber(Thread):
         while self.running:
             self.process_frame()
             self.tick_fps()
+            self.frame_grabbed.clear()
+            self.frame_grabbed.set()
 
     def tick_fps(self):
         self.frames += 1
